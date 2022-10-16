@@ -20,18 +20,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # device = 'cpu'
 
 
-def get_total_tardiness(env):
-    total_tardiness = 0
-    Job = env.env.Jobs
-    # K = [i for i in range(len(Job))]
-    End = []
-    for i, Ji in enumerate(env.env.Jobs):
-        End.append(Ji.End)
-        if max(Ji.End) > env.env.D[i]:
-            total_tardiness += abs(max(Ji.End) - env.env.D[i])
-    return total_tardiness
-
-
 def train():
     env = Env(Param())
     play_env = Env(Param())
@@ -60,7 +48,6 @@ def train():
     for epoch in range(epochs):
         done = False
         state = env.reset()
-        play_env.reset(is_play=True)
         state = torch.FloatTensor(state)
 
         while not done:
@@ -91,7 +78,10 @@ def train():
                 if steps % update_target == 0:
                     target_net.load_state_dict(online_net.state_dict())
 
-        total_tardiness = get_total_tardiness(env)
+        # Calculate loss function
+        play_env.reset(is_play=True)
+        total_tardiness = play(play_env, online_net)
+
         if epoch % log_interval == 0:
             print('{} episode | epsilon: {:.2f} | total_tardiness: {:.2f}'.format(
                 epoch, epsilon, total_tardiness))
@@ -99,15 +89,17 @@ def train():
     # torch.save(online_net.state_dict(), 'dqn.pt')
 
 
-def play(play_env, online_net):
-    state = play_env.reset()
+def play(env, online_net):
+    state = env.observation_space.state
     state = torch.FloatTensor(state)
     done = False
-    while done:
+    while not done:
         action = online_net.get_action(state)
-        state, _, done = play_env.step(action)
+        state, _, done = env.step(action)
         state = torch.FloatTensor(state)
-    return get_total_tardiness(play_env)
+
+    job_tardiness = [max(max(Ji.End) - env.env.D[i], 0) for i, Ji in enumerate(env.env.Jobs)]
+    return sum(job_tardiness)
 
 
 if __name__ == "__main__":

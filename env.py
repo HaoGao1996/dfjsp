@@ -1,6 +1,7 @@
 import random
 
 from jsp import JobShopProblem
+from copy import deepcopy
 
 
 class ObservationSpace(object):
@@ -46,9 +47,9 @@ class Env(object):
     def reset(self, is_play=False):
         if not self.backup_env:
             self.env = JobShopProblem(self.param)
-            self.backup_env = self.env
+            self.backup_env = deepcopy(self.env)
         elif is_play:
-            self.env = self.backup_env
+            self.env = deepcopy(self.backup_env)
         else:
             self.env = JobShopProblem(self.param)
 
