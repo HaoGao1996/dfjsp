@@ -84,9 +84,21 @@ class JobShopProblem(object):
         self.O_num = sum(self.Op_num)
         self.J = dict(enumerate(self.Op_num))
         # Generate processing time matrix (J_num * Op_num[i] * M_num)
-        self.Processing_time = [[[-1 if random.random() < self.param.pb_jop else random.randint(1, self.param.max_processing_time)
-                                  for _ in range(self.M_num)] for _ in range(self.Op_num[i])]
-                                for i in range(self.J_num)]
+        self.Processing_time = []
+        for i in range(self.J_num):
+            job_processing_time = []
+            for _ in range(self.Op_num[i]):
+                op_processing_time = [-1] * self.M_num
+                for j in range(self.M_num):
+                    if random.random() < self.param.pb_jop:
+                        op_processing_time[j] = random.randint(1, self.param.max_processing_time)
+                # if all value are -1
+                if op_processing_time.count(-1) == self.M_num:
+                    op_processing_time[random.randint(0, self.M_num-1)] = \
+                        random.randint(1, self.param.max_processing_time)
+                job_processing_time.append(op_processing_time)
+            self.Processing_time.append(job_processing_time)
+
         # Generate the arrival time of jobs (1 * J_num)
         self.A = [0] * self.param.J_init_num + np.random.exponential(self.param.E_ave, size=self.param.J_insert_num).astype(int).tolist()
 
