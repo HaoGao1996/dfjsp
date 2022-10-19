@@ -4,7 +4,7 @@ from torch import optim
 
 from dqn import DQN, ReplayMemory
 from env import Env
-from jsp import Param
+from jsp_utility import Param
 
 # Hyper-parameters
 gamma = 0.99
@@ -86,7 +86,7 @@ def train():
             print('{} episode | epsilon: {:.2f} | total_tardiness: {:.2f}'.format(
                 epoch, epsilon, total_tardiness))
 
-    # torch.save(online_net.state_dict(), 'dqn.pt')
+    torch.save(online_net.state_dict(), 'dqn.pt')
 
 
 def play(env, online_net):
@@ -98,8 +98,7 @@ def play(env, online_net):
         state, _, done = env.step(action)
         state = torch.FloatTensor(state)
 
-    job_tardiness = [max(max(Ji.End) - env.env.D[i], 0) for i, Ji in enumerate(env.env.Jobs)]
-    return sum(job_tardiness)
+    return sum([max(job.CTK - job.D, 0) for job in env.jsp.jobs])
 
 
 if __name__ == "__main__":

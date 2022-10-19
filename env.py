@@ -38,7 +38,7 @@ class ActionSpace(object):
 class Env(object):
     def __init__(self, param):
         self.param = param
-        self.env = None
+        self.jsp = None
         self.backup_env = None
         self.observation_space = ObservationSpace()
         self.action_space = ActionSpace()
@@ -46,25 +46,25 @@ class Env(object):
 
     def reset(self, is_play=False):
         if not self.backup_env:
-            self.env = JobShopProblem(self.param)
-            self.backup_env = deepcopy(self.env)
+            self.jsp = JobShopProblem(self.param)
+            self.backup_jsp = deepcopy(self.jsp)
         elif is_play:
-            self.env = deepcopy(self.backup_env)
+            self.jsp = deepcopy(self.backup_jsp)
         else:
-            self.env = JobShopProblem(self.param)
+            self.jsp = JobShopProblem(self.param)
 
-        self.action_space.reset(self.env.actions)
-        self.observation_space.reset(self.env.features())
+        self.action_space.reset(self.jsp.actions)
+        self.observation_space.reset(self.jsp.features())
 
         return self.observation_space.state
 
     def step(self, action):
         # Obtain action transition and scheduling it to env
-        self.env.scheduling(self.action_space.actions[action]())
+        self.jsp.scheduling(self.action_space.actions[action]())
         # Obtain next state
-        next_state = self.env.features()
+        next_state = self.jsp.features()
         # Calculate reward
-        reward = self.env.reward(self.observation_space.state[6],
+        reward = self.jsp.reward(self.observation_space.state[6],
                                  self.observation_space.state[5],
                                  next_state[6],
                                  next_state[5],
@@ -73,4 +73,4 @@ class Env(object):
         # Set env observation state
         self.observation_space.state = next_state
 
-        return next_state, reward, self.env.done
+        return next_state, reward, self.jsp.done
