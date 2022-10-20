@@ -28,9 +28,12 @@ class JobShopProblem(object):
         self.Tard_job = [job for job in self.jobs if job.is_tardiness]  # Tardiness jobs
 
     def scheduling(self, action):
-        job, machine = action[0], action[1]
+        job, machine = self.jobs[action[0]], self.machines[action[1]]
         operation = job.operations[job.OP]
         self.policy_list.append([job.idx, operation.idx, machine.idx])
+
+        if operation.t_ijk[machine.idx] == -1:
+            print("error")
 
         start_time = max(job.CTK, machine.CTK)  # Next operation start time
         end_time = start_time + operation.t_ijk[machine.idx]
@@ -113,7 +116,9 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        return job, machine
+        if operation.t_ijk[machine.idx] == -1:
+            print("error rule1")
+        return job.idx, machine.idx
 
     # Composite dispatching rule 2
     def rule2(self):
@@ -137,11 +142,13 @@ class JobShopProblem(object):
         # Select machine
         machine = self.machines[
             np.argmin(
-                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > -1 else MAXINT
+                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > 0 else MAXINT
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        return job, machine
+        if operation.t_ijk[machine.idx] == -1:
+            print("error rule2")
+        return job.idx, machine.idx
 
     # Composite dispatching rule 3
     def rule3(self):
@@ -159,17 +166,19 @@ class JobShopProblem(object):
             machine = self.machines[
                 np.argmin(
                     [self.machines[idx].UK if t_ij > -1 else MAXINT
-                     for idx, t_ij in enumerate(operation.t_ijk) if t_ij > -1]
+                     for idx, t_ij in enumerate(operation.t_ijk)]
                 )
             ]
         else:
             machine = self.machines[
                 np.argmin(
                     [self.machines[idx].CTK - self.machines[idx].ITK if t_ij > -1 else MAXINT
-                     for idx, t_ij in enumerate(operation.t_ijk) if t_ij > -1]
+                     for idx, t_ij in enumerate(operation.t_ijk)]
                 )
             ]
-        return job, machine
+        if operation.t_ijk[machine.idx] == -1:
+            print("error rule3")
+        return job.idx, machine.idx
 
     # Composite dispatching rule 4
     def rule4(self):
@@ -184,7 +193,9 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        return job, machine
+        if operation.t_ijk[machine.idx] == -1:
+            print("error rule4")
+        return job.idx, machine.idx
 
     # Composite dispatching rule 5
     def rule5(self):
@@ -212,7 +223,9 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        return job, machine
+        if operation.t_ijk[machine.idx] == -1:
+            print("error rule5")
+        return job.idx, machine.idx
 
     # Composite dispatching rule 6
     def rule6(self):
@@ -232,7 +245,9 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        return job, machine
+        if operation.t_ijk[machine.idx] == -1:
+            print("error rule6")
+        return job.idx, machine.idx
 
     def reward(self, Ta_t, Te_t, Ta_t1, Te_t1, U_t, U_t1):
         """
@@ -265,9 +280,14 @@ class JobShopProblem(object):
                                 rt = -1
         return rt
 
+    def print_param(self):
+        print(f"Arrival time: {[job.A for job in self.jobs]}")
+        print(f"Due date time: {[job.D for job in self.jobs]}")
+
 
 if __name__ == "__main__":
     jsp = JobShopProblem(Param())
-    jsp.scheduling(jsp.rule1())
+    for i in range(700):
+        jsp.scheduling(jsp.rule2(), 2)
     print("Created!")
 

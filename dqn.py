@@ -87,15 +87,16 @@ class DQN(nn.Module):
 
         # pred: (batch_size, action_dim)
         pred = online_net(states)
+        _, action_from_online_net = online_net(next_states).max(1)
         next_pred = target_net(next_states)
 
         # pred: (batch_size, )
         pred = torch.sum(pred.mul(actions), dim=1)
 
         # pred: (batch_size, )
-        target = rewards + masks * gamma * next_pred.max(1)[0]
+        target = rewards + masks * gamma * next_pred.gather(1, action_from_online_net.unsqueeze(1)).max(1)[0]
 
-        # L = (rewards + gamma * maxQ(s', a', w-) - Q(s', a', w))^2
+        # L = (rewards + gamma * Q(s', argmaxQ(s', a', w), w-) - Q(s', a', w))^2
         loss = F.mse_loss(pred, target.detach())
         optimizer.zero_grad()
         loss.backward()

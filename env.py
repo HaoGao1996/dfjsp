@@ -38,17 +38,14 @@ class ActionSpace(object):
 class Env(object):
     def __init__(self, param):
         self.param = param
-        self.jsp = None
-        self.backup_env = None
+        self.jsp = JobShopProblem(self.param)
+        self.backup_jsp = deepcopy(self.jsp)
         self.observation_space = ObservationSpace()
         self.action_space = ActionSpace()
         self.reset()
 
     def reset(self, is_play=False):
-        if not self.backup_env:
-            self.jsp = JobShopProblem(self.param)
-            self.backup_jsp = deepcopy(self.jsp)
-        elif is_play:
+        if is_play:
             self.jsp = deepcopy(self.backup_jsp)
         else:
             self.jsp = JobShopProblem(self.param)
