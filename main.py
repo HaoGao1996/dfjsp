@@ -10,7 +10,7 @@ from jsp_utility import Param
 gamma = 0.99
 lr = 0.001
 replay_memory_capacity = 1000
-epochs = 3000
+epochs = 6000
 initial_exploration = 1000
 log_interval = 1
 batch_size = 32
