@@ -6,7 +6,7 @@ import sys
 from jsp_utility import Machine, Job, Param
 
 MAXINT = sys.maxsize
-MININT = -sys.maxsize -1
+MININT = -sys.maxsize - 1
 
 
 class JobShopProblem(object):
