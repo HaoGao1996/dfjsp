@@ -7,7 +7,7 @@ class Param(object):
                  J_init_num=10,
                  J_insert_num=20,
                  DDT=0.5,
-                 max_op_num=10,
+                 max_op_num=5,
                  max_processing_time=20,
                  pb_jop=0.3,
                  E_ave=50):

@@ -4,9 +4,9 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device = 'cpu'
+# device =  torch.device('cpu')
+
 Transition = namedtuple('Transition',
                         ('state', 'next_state', 'action', 'reward', 'mask'))
 
@@ -102,4 +102,4 @@ class DQN(nn.Module):
         loss.backward()
         optimizer.step()
 
-        return loss
+        return loss, rewards.mean()

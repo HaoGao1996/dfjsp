@@ -16,7 +16,8 @@ class JobShopProblem(object):
         self.machines = [Machine(i) for i in range(self.M_num)]  # Set of machines
         self.J_num = param.J_num  # Jobs' number
         self.jobs = [Job(i, param) for i in range(self.J_num)]  # Set of jobs
-        self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule5]  # Rules
+        self.actions = [self.rule1, self.rule2, self.rule5, self.rule6]
+        # self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule6]  # Rules
         self.policy_list = []
 
         self.total_op_num = sum([job.op_num for job in self.jobs])  # Total operation number
@@ -284,10 +285,19 @@ class JobShopProblem(object):
         print(f"Arrival time: {[job.A for job in self.jobs]}")
         print(f"Due date time: {[job.D for job in self.jobs]}")
 
+    def play_with_single_rule(self, action):
+        for _ in range(self.total_op_num):
+            self.scheduling(self.actions[action]())
+
+    def save_jsp_param(self):
+        pass
+
+    def load_jsp_param(self):
+        pass
+
 
 if __name__ == "__main__":
     jsp = JobShopProblem(Param())
-    for i in range(700):
-        jsp.scheduling(jsp.rule2(), 2)
+    jsp.play_with_single_rule(0)
     print("Created!")
 
