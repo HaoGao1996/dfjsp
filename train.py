@@ -34,6 +34,7 @@ def train():
     epsilon = 0.5
     steps = 0
     loss = MAXINT
+    should_finished_early = False
 
     for epoch in range(dqn_param.epochs):
         done = False
@@ -71,11 +72,14 @@ def train():
                 steps_info.loc[len(steps_info.index)] = [epoch, steps, epsilon,
                                                          loss.detach().item(),
                                                          reward.detach().item()]
+                if loss < 0.001 or steps > 10000:
+                    should_finished_early = True
+                    break
 
         if epoch % dqn_param.log_interval == 0:
             print(f"{epoch} episode | epsilon: {epsilon:.2f} | steps: {steps} | loss: {loss:.2f} | reward: {reward:.2f}")
 
-        if loss < 0.05 or steps > 10000:
+        if should_finished_early:
             break
 
     steps_info.to_csv("./tmp_result/steps_info.csv", index=False)

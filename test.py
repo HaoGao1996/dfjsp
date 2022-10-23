@@ -39,6 +39,7 @@ def test(sample_num=1):
 
     test_result = pd.DataFrame(columns=["online_net", "random"]+[f"rule{i+1}" for i in range(action_dim)])
     count = 0
+    count_random = 0
     for i in range(sample_num):
         round_result = []
 
@@ -62,8 +63,10 @@ def test(sample_num=1):
 
         if np.argmin(round_result) == 0:
             count += 1
+        elif np.argmin(round_result[1:]) == 0:
+            count_random += 1
 
-        print(f"round: {i} | count: {count} | tardiness: {round_result[1:]}")
+        print(f"round: {i} | count: {count} | count_random: {count_random} | tardiness: {round_result}")
         test_result.loc[len(test_result.index)] = round_result
 
     return test_result

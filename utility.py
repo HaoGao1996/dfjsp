@@ -6,7 +6,7 @@ class DQNParam(object):
     def __init__(self,
                  gamma=0.9,
                  lr=0.001,
-                 replay_memory_capacity=500,
+                 replay_memory_capacity=1000,
                  epochs=50,
                  initial_exploration=1000,
                  log_interval=1,

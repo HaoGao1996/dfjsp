@@ -26,7 +26,8 @@ class JobShopProblem(object):
         else:
             raise JSPInputError("No available param: jsp")
 
-        self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule6]  # Rules
+        self.actions = [self.rule1, self.rule2]  # Rules
+        # self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule6]  # Rules
         self.policy_list = []
 
         self.total_op_num = sum([job.op_num for job in self.jobs])  # Total operation number
