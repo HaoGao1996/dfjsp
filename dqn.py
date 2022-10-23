@@ -47,6 +47,10 @@ class DQN(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(inplace=True),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, outputs_dim),
         )
 
@@ -95,8 +99,6 @@ class DQN(nn.Module):
         loss = F.mse_loss(pred, target.detach())
         optimizer.zero_grad()
         loss.backward()
-        for param in online_net.parameters():
-            param.grad.data.clamp_(-1, 1)
         optimizer.step()
 
-        return loss, rewards.mean()
+        return loss

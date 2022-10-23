@@ -57,10 +57,11 @@ class Env(object):
         # Calculate reward
         reward = self.jsp.reward(self.observation_space.state[6],
                                  self.observation_space.state[5],
+                                 self.observation_space.state[0],
                                  next_state[6],
                                  next_state[5],
-                                 self.observation_space.state[0],
                                  next_state[0])
+
         # Set env observation state
         self.observation_space.state = next_state
 

@@ -63,7 +63,7 @@ def train():
                 epsilon = max(epsilon, 0.1)
 
                 batch = memory.sample(dqn_param.batch_size)
-                loss, reward = DQN.train_model(online_net, target_net, optimizer, batch, dqn_param.gamma)
+                loss = DQN.train_model(online_net, target_net, optimizer, batch, dqn_param.gamma)
 
                 # Update target network parameters.
                 for target_param, param in zip(target_net.parameters(), online_net.parameters()):
@@ -71,13 +71,13 @@ def train():
 
                 steps_info.loc[len(steps_info.index)] = [epoch, steps, epsilon,
                                                          loss.detach().item(),
-                                                         reward.detach().item()]
-                if loss < 0.001 or steps > 10000:
+                                                         reward]
+                if steps > 10000:
                     should_finished_early = True
                     break
 
         if epoch % dqn_param.log_interval == 0:
-            print(f"{epoch} episode | epsilon: {epsilon:.2f} | steps: {steps} | loss: {loss:.2f} | reward: {reward:.2f}")
+            print(f"{epoch} episode | epsilon: {epsilon:.2f} | steps: {steps} | loss: {loss:} | reward: {reward}")
 
         if should_finished_early:
             break

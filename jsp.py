@@ -26,7 +26,7 @@ class JobShopProblem(object):
         else:
             raise JSPInputError("No available param: jsp")
 
-        self.actions = [self.rule1, self.rule2]  # Rules
+        self.actions = [self.rule1, self.rule2, self.rule5, self.rule6]  # Rules
         # self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule6]  # Rules
         self.policy_list = []
 
@@ -66,7 +66,7 @@ class JobShopProblem(object):
             for i in range(job.OP, job.op_num):
                 T_left += job.operations[i].t_ij_ave
                 if T_left + self.T_cur > job.D:
-                    N_tard += job.op_num - i + 1
+                    N_tard += job.op_num - i
                     break
         return N_tard / N_left
 
@@ -251,36 +251,39 @@ class JobShopProblem(object):
 
         return job.idx, machine.idx
 
-    def reward(self, Ta_t, Te_t, Ta_t1, Te_t1, U_t, U_t1):
+    def reward(self, Ta_t, Te_t, U_t, Ta_t1, Te_t1, U_t1):
         """
         :param Ta_t: Tard_a(t)
         :param Te_t: Tard_e(t)
+        :param U_t: U_ave(t)
         :param Ta_t1: Tard_a(t+1)
         :param Te_t1: Tard_e(t+1)
-        :param U_t: U_ave(t)
         :param U_t1: U_ave(t+1)
         :return: reward
         """
-        if Ta_t1 < Ta_t:
-            rt = 1
-        else:
-            if Ta_t1 > Ta_t:
-                rt = -1
-            else:
-                if Te_t1 < Te_t:
-                    rt = 1
-                else:
-                    if Te_t1 > Te_t:
-                        rt = -1
-                    else:
-                        if U_t1 > U_t:
-                            rt = 1
-                        else:
-                            if U_t1 > 0.95 * U_t:
-                                rt = 0
-                            else:
-                                rt = -1
-        return rt
+        # New reward
+        reward = 1 * (Ta_t - Ta_t1) + 0.95 * (Te_t - Te_t1) + 0.9 * (U_t1 - U_t)
+
+        # if Ta_t1 < Ta_t:
+        #     reward = 1
+        # else:
+        #     if Ta_t1 > Ta_t:
+        #         reward = -1
+        #     else:
+        #         if Te_t1 < Te_t:
+        #             reward = 1
+        #         else:
+        #             if Te_t1 > Te_t:
+        #                 reward = -1
+        #             else:
+        #                 if U_t1 > U_t:
+        #                     reward = 1
+        #                 else:
+        #                     if U_t1 > 0.95 * U_t:
+        #                         reward = 0
+        #                     else:
+        #                         reward = -1
+        return reward / 3
 
     def play_with_single_rule(self, action):
         while not self.done:
