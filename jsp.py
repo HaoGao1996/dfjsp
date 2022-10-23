@@ -1,23 +1,32 @@
+import json
 import numpy as np
 import random
 import statistics as s
-import sys
 
-from jsp_utility import Machine, Job, Param
-
-MAXINT = sys.maxsize
-MININT = -sys.maxsize - 1
+from jsp_utility import Machine, Job, JSPInputError
+from utility import JSPParam, MAXINT
 
 
 class JobShopProblem(object):
-    def __init__(self, param):
-        self.param = param  # Basic parameters
-        self.M_num = param.M_num  # Machines number
-        self.machines = [Machine(i) for i in range(self.M_num)]  # Set of machines
-        self.J_num = param.J_num  # Jobs' number
-        self.jobs = [Job(i, param) for i in range(self.J_num)]  # Set of jobs
-        self.actions = [self.rule1, self.rule2, self.rule5, self.rule6]
-        # self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule6]  # Rules
+    def __init__(self, param=None):
+        if isinstance(param, JSPParam):
+            #  Randomly generate jsp params
+            self.M_num = param.M_num  # Machines number
+            self.machines = [Machine(i) for i in range(self.M_num)]  # Set of machines
+            self.J_num = param.J_num  # Jobs' number
+            self.jobs = [Job(i, param) for i in range(self.J_num)]  # Set of jobs
+        elif isinstance(param, str):
+            # Using exist jsp params
+            with open(param) as f:
+                param_dict = json.load(f)
+            self.M_num = param_dict["M_num"]
+            self.machines = [Machine(i) for i in range(self.M_num)]
+            self.J_num = param_dict["J_num"]
+            self.jobs = [Job(int(idx), job) for idx, job in param_dict["jobs"].items()]
+        else:
+            raise JSPInputError("No available param: jsp")
+
+        self.actions = [self.rule1, self.rule2, self.rule3, self.rule4, self.rule5, self.rule6]  # Rules
         self.policy_list = []
 
         self.total_op_num = sum([job.op_num for job in self.jobs])  # Total operation number
@@ -32,9 +41,6 @@ class JobShopProblem(object):
         job, machine = self.jobs[action[0]], self.machines[action[1]]
         operation = job.operations[job.OP]
         self.policy_list.append([job.idx, operation.idx, machine.idx])
-
-        if operation.t_ijk[machine.idx] == -1:
-            print("error")
 
         start_time = max(job.CTK, machine.CTK)  # Next operation start time
         end_time = start_time + operation.t_ijk[machine.idx]
@@ -117,8 +123,7 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        if operation.t_ijk[machine.idx] == -1:
-            print("error rule1")
+
         return job.idx, machine.idx
 
     # Composite dispatching rule 2
@@ -147,8 +152,7 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        if operation.t_ijk[machine.idx] == -1:
-            print("error rule2")
+
         return job.idx, machine.idx
 
     # Composite dispatching rule 3
@@ -177,8 +181,7 @@ class JobShopProblem(object):
                      for idx, t_ij in enumerate(operation.t_ijk)]
                 )
             ]
-        if operation.t_ijk[machine.idx] == -1:
-            print("error rule3")
+
         return job.idx, machine.idx
 
     # Composite dispatching rule 4
@@ -194,8 +197,7 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        if operation.t_ijk[machine.idx] == -1:
-            print("error rule4")
+
         return job.idx, machine.idx
 
     # Composite dispatching rule 5
@@ -224,8 +226,7 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        if operation.t_ijk[machine.idx] == -1:
-            print("error rule5")
+
         return job.idx, machine.idx
 
     # Composite dispatching rule 6
@@ -246,8 +247,7 @@ class JobShopProblem(object):
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
-        if operation.t_ijk[machine.idx] == -1:
-            print("error rule6")
+
         return job.idx, machine.idx
 
     def reward(self, Ta_t, Te_t, Ta_t1, Te_t1, U_t, U_t1):
@@ -281,23 +281,41 @@ class JobShopProblem(object):
                                 rt = -1
         return rt
 
-    def print_param(self):
-        print(f"Arrival time: {[job.A for job in self.jobs]}")
-        print(f"Due date time: {[job.D for job in self.jobs]}")
-
     def play_with_single_rule(self, action):
-        for _ in range(self.total_op_num):
+        while not self.done:
             self.scheduling(self.actions[action]())
 
-    def save_jsp_param(self):
-        pass
+    def play_with_random_rule(self):
+        while not self.done:
+            self.scheduling(self.actions[random.randint(0, len(self.actions)-1)]())
 
-    def load_jsp_param(self):
-        pass
+    def save_jsp_param(self, filename):
+        # Data to be written
+        dictionary = {
+            "M_num": self.M_num,
+            "J_num": self.J_num,
+            "jobs": {job.idx: job.save_job_param() for job in self.jobs}
+        }
+        # Serializing json
+        json_object = json.dumps(dictionary, indent=4)
+        # Writing to sample.json
+        with open(filename, "w") as f:
+            f.write(json_object)
+
+    def print_param(self):
+        print(f"Machines number {self.M_num}, Jobs number {self.J_num}")
+        print(f"Arrival time: {[job.A for job in self.jobs]}")
+        print(f"Due date time: {[job.D for job in self.jobs]}")
+        print(f"Operation num : {[job.op_num for job in self.jobs]}")
 
 
 if __name__ == "__main__":
-    jsp = JobShopProblem(Param())
-    jsp.play_with_single_rule(0)
+    from utility import jsp_param
+
+    jsp = JobShopProblem(jsp_param)
+    jsp.save_jsp_param("test.json")
+    jsp.print_param()
+    jsp = JobShopProblem("test.json")
+    jsp.print_param()
     print("Created!")
 

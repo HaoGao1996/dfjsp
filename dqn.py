@@ -4,8 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device =  torch.device('cpu')
+from utility import device
 
 Transition = namedtuple('Transition',
                         ('state', 'next_state', 'action', 'reward', 'mask'))

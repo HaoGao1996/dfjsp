@@ -52,9 +52,3 @@ classDiagram
 ## Reference
 
 1. [Tensorflow2.0|基于深度强化学习（DQN）实现动态柔性作业车间调度问题（DFJSP）](https://blog.csdn.net/crazy_girl_me/article/details/118694032?spm=1001.2014.3001.5501)
-
-
-baseline:
-action: 0, tardiness: 2369
-action: 1, tardiness: 2605
-action: 2, tardiness: 2600

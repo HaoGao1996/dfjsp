@@ -1,7 +1,6 @@
 import random
 
 from jsp import JobShopProblem
-from copy import deepcopy
 
 
 class ObservationSpace(object):
@@ -38,18 +37,13 @@ class ActionSpace(object):
 class Env(object):
     def __init__(self, param):
         self.param = param
-        self.jsp = JobShopProblem(self.param)
-        self.backup_jsp = deepcopy(self.jsp)
+        self.jsp = None
         self.observation_space = ObservationSpace()
         self.action_space = ActionSpace()
         self.reset()
 
-    def reset(self, is_play=False):
-        if is_play:
-            self.jsp = deepcopy(self.backup_jsp)
-        else:
-            self.jsp = JobShopProblem(self.param)
-
+    def reset(self):
+        self.jsp = JobShopProblem(self.param)
         self.action_space.reset(self.jsp.actions)
         self.observation_space.reset(self.jsp.features())
 
