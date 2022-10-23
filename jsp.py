@@ -51,7 +51,7 @@ class JobShopProblem(object):
 
         self.T_cur = s.mean([machine.CTK for machine in self.machines])
         self.UC_job = [job for job in self.jobs if job.is_uncompleted]
-        self.Tard_job = [job for job in self.jobs if job.is_tardiness]
+        self.Tard_job = [job for job in self.jobs if job.is_uncompleted and job.D < self.T_cur]
 
         # If all operations have been scheduled, end game.
         self.finished_O_num += 1

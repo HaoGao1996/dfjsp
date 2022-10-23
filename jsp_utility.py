@@ -71,7 +71,6 @@ class Job(object):
         self.OP += 1
         self.CRJ = self.OP / self.op_num
         self.is_uncompleted = self.OP < self.op_num
-        self.is_tardiness = self.is_uncompleted and self.CTK > self.D
         self.estimated_t_ij = sum(self.t_ij[self.OP:]) if self.is_uncompleted else 0
 
     def save_job_param(self):
