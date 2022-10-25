@@ -5,7 +5,7 @@ import torch
 class DQNParam(object):
     def __init__(self,
                  gamma=0.9,
-                 lr=0.001,
+                 lr=0.00001,
                  replay_memory_capacity=1000,
                  epochs=50,
                  initial_exploration=1000,
@@ -28,14 +28,13 @@ class DQNParam(object):
 
 class JSPParam(object):
     def __init__(self,
-                 M_num=20,
+                 M_num=30,
                  J_init_num=20,
-                 J_insert_num=50,
-                 DDT=0.5,
+                 J_insert_num=100,
+                 DDT=1.0,
                  max_op_num=20,
                  max_processing_time=50,
-                 pb_jop=0.5,
-                 E_ave=50):
+                 E_ave=100):
         """
         :param M_num: machine number
         :param J_init_num: job initial number
@@ -53,7 +52,6 @@ class JSPParam(object):
         self.DDT = DDT
         self.max_op_num = max_op_num
         self.max_processing_time = max_processing_time
-        self.pb_jop = pb_jop
         self.E_ave = E_ave
 
 

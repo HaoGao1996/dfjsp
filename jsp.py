@@ -35,8 +35,14 @@ class JobShopProblem(object):
         self.done = False  # Flag if jsp is solved
 
         self.T_cur = 0  # Average completion time of the last operations on all machines
-        self.UC_job = [job for job in self.jobs if job.is_uncompleted]  # Uncompleted jobs
-        self.Tard_job = [job for job in self.jobs if job.is_tardiness]  # Tardiness jobs
+        self.UC_jobs = [job for job in self.jobs if job.is_uncompleted and job.A <= self.T_cur]  # Uncompleted jobs
+        if len(self.UC_jobs) == 0:
+            self.UC_jobs = [
+                self.jobs[
+                    np.argmin([job.A if not job.is_uncompleted else MAXINT for job in self.jobs])
+                ]
+            ]
+        self.Tard_jobs = [job for job in self.jobs if job.is_uncompleted and job.D < self.T_cur]  # Tardiness jobs
 
     def scheduling(self, action):
         job, machine = self.jobs[action[0]], self.machines[action[1]]
@@ -50,8 +56,14 @@ class JobShopProblem(object):
         job.update(end_time)
 
         self.T_cur = s.mean([machine.CTK for machine in self.machines])
-        self.UC_job = [job for job in self.jobs if job.is_uncompleted]
-        self.Tard_job = [job for job in self.jobs if job.is_uncompleted and job.D < self.T_cur]
+        self.UC_jobs = [job for job in self.jobs if job.is_uncompleted and job.A <= self.T_cur]  # Uncompleted jobs
+        if len(self.UC_jobs) == 0:
+            self.UC_jobs = [
+                self.jobs[
+                    np.argmin([job.A if not job.is_uncompleted else MAXINT for job in self.jobs])
+                ]
+            ]
+        self.Tard_jobs = [job for job in self.jobs if job.is_uncompleted and job.D < self.T_cur]
 
         # If all operations have been scheduled, end game.
         self.finished_O_num += 1
@@ -59,9 +71,9 @@ class JobShopProblem(object):
             self.done = True
 
     def _estimated_tardiness_rate(self):
-        N_left = sum([job.op_num - job.OP for job in self.UC_job])
+        N_left = sum([job.op_num - job.OP for job in self.UC_jobs])
         N_tard = 0
-        for job in self.UC_job:
+        for job in self.UC_jobs:
             T_left = 0
             for i in range(job.OP, job.op_num):
                 T_left += job.operations[i].t_ij_ave
@@ -71,8 +83,8 @@ class JobShopProblem(object):
         return N_tard / N_left
 
     def _actual_tardiness_rate(self):
-        N_left = sum([job.op_num - job.OP for job in self.UC_job])
-        N_tard = sum([job.op_num - job.OP for job in self.Tard_job])
+        N_left = sum([job.op_num - job.OP for job in self.UC_jobs])
+        N_tard = sum([job.op_num - job.OP for job in self.Tard_jobs])
 
         return N_tard / N_left
 
@@ -89,11 +101,12 @@ class JobShopProblem(object):
         Feature 7: Actual tardiness rate Tard_a
         """
         UK_list = [machine.UK for machine in self.machines]
-        OP_list = [job.OP for job in self.jobs]
-        CRJ_list = [job.CRJ for job in self.jobs]
+        OP_list = [job.OP for job in self.UC_jobs]
+        op_list = [job.op_num for job in self.UC_jobs]
+        CRJ_list = [job.CRJ for job in self.UC_jobs]
 
         return np.array([s.mean(UK_list), s.pstdev(UK_list),
-                         s.mean(OP_list) / self.total_op_num,
+                         sum(OP_list) / sum(op_list),
                          s.mean(CRJ_list), s.pstdev(CRJ_list),
                          self._estimated_tardiness_rate(),
                          self._actual_tardiness_rate()])
@@ -101,18 +114,18 @@ class JobShopProblem(object):
     # Composite dispatching rule 1
     def rule1(self):
         # Select job
-        if not self.Tard_job:
-            job = self.UC_job[
+        if not self.Tard_jobs:
+            job = self.UC_jobs[
                 np.argmin(
                     [(job.D - self.T_cur) / (job.op_num - job.OP)
-                     for job in self.UC_job]
+                     for job in self.UC_jobs]
                 )
             ]
         else:
-            job = self.Tard_job[
+            job = self.Tard_jobs[
                 np.argmax(
                     [self.T_cur + job.estimated_t_ij - job.D
-                     for job in self.Tard_job]
+                     for job in self.Tard_jobs]
                 )
             ]
         # Select operation
@@ -120,7 +133,7 @@ class JobShopProblem(object):
         # Select machine
         machine = self.machines[
             np.argmin(
-                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > -1 else MAXINT
+                [max(self.machines[idx].CTK, job.CTK, job.A) if t_ij > -1 else MAXINT
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
@@ -130,18 +143,18 @@ class JobShopProblem(object):
     # Composite dispatching rule 2
     def rule2(self):
         # Select job
-        if not self.Tard_job:
-            job = self.UC_job[
+        if not self.Tard_jobs:
+            job = self.UC_jobs[
                 np.argmin(
                     [(job.D - self.T_cur) / job.estimated_t_ij
-                     for job in self.UC_job]
+                     for job in self.UC_jobs]
                 )
             ]
         else:
-            job = self.Tard_job[
+            job = self.Tard_jobs[
                 np.argmax(
                     [self.T_cur + job.estimated_t_ij - job.D
-                     for job in self.Tard_job]
+                     for job in self.Tard_jobs]
                 )
             ]
         # Select operation
@@ -149,7 +162,7 @@ class JobShopProblem(object):
         # Select machine
         machine = self.machines[
             np.argmin(
-                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > 0 else MAXINT
+                [max(self.machines[idx].CTK, job.CTK, job.A) if t_ij > 0 else MAXINT
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
@@ -159,10 +172,10 @@ class JobShopProblem(object):
     # Composite dispatching rule 3
     def rule3(self):
         # Select job
-        job = self.UC_job[
+        job = self.UC_jobs[
             np.argmax(
                 [self.T_cur + job.estimated_t_ij - job.D
-                 for job in self.UC_job]
+                 for job in self.UC_jobs]
             )
         ]
         # Select operation
@@ -188,13 +201,13 @@ class JobShopProblem(object):
     # Composite dispatching rule 4
     def rule4(self):
         # Select job.
-        job = self.UC_job[random.randint(0, len(self.UC_job)-1)]
+        job = self.UC_jobs[random.randint(0, len(self.UC_jobs)-1)]
         # Select operation
         operation = job.operations[job.OP]
         # Select machine
         machine = self.machines[
             np.argmin(
-                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > -1 else MAXINT
+                [max(self.machines[idx].CTK, job.CTK, job.A) if t_ij > -1 else MAXINT
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
@@ -204,18 +217,18 @@ class JobShopProblem(object):
     # Composite dispatching rule 5
     def rule5(self):
         # Select job.
-        if not self.Tard_job:
-            job = self.UC_job[
+        if not self.Tard_jobs:
+            job = self.UC_jobs[
                 np.argmin(
                     [job.CRJ * (job.D - self.T_cur)
-                     for job in self.UC_job]
+                     for job in self.UC_jobs]
                 )
             ]
         else:
-            job = self.Tard_job[
+            job = self.Tard_jobs[
                 np.argmax(
                     [job.CRJ * (self.T_cur + job.estimated_t_ij - job.D)
-                     for job in self.Tard_job]
+                     for job in self.Tard_jobs]
                 )
             ]
         # Select operation
@@ -223,7 +236,7 @@ class JobShopProblem(object):
         # Select machine
         machine = self.machines[
             np.argmin(
-                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > -1 else MAXINT
+                [max(self.machines[idx].CTK, job.CTK, job.A) if t_ij > -1 else MAXINT
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
@@ -233,10 +246,10 @@ class JobShopProblem(object):
     # Composite dispatching rule 6
     def rule6(self):
         # Select job
-        job = self.UC_job[
+        job = self.UC_jobs[
             np.argmax(
                 [self.T_cur + job.estimated_t_ij - job.D
-                 for job in self.UC_job]
+                 for job in self.UC_jobs]
             )
         ]
         # Select operation
@@ -244,7 +257,7 @@ class JobShopProblem(object):
         # Select machine
         machine = self.machines[
             np.argmin(
-                [max(self.machines[idx].CTK, t_ij, job.A) if t_ij > -1 else MAXINT
+                [max(self.machines[idx].CTK, job.CTK, job.A) if t_ij > -1 else MAXINT
                  for idx, t_ij in enumerate(operation.t_ijk)]
             )
         ]
@@ -261,29 +274,26 @@ class JobShopProblem(object):
         :param U_t1: U_ave(t+1)
         :return: reward
         """
-        # New reward
-        reward = 1 * (Ta_t - Ta_t1) + 0.95 * (Te_t - Te_t1) + 0.9 * (U_t1 - U_t)
-
-        # if Ta_t1 < Ta_t:
-        #     reward = 1
-        # else:
-        #     if Ta_t1 > Ta_t:
-        #         reward = -1
-        #     else:
-        #         if Te_t1 < Te_t:
-        #             reward = 1
-        #         else:
-        #             if Te_t1 > Te_t:
-        #                 reward = -1
-        #             else:
-        #                 if U_t1 > U_t:
-        #                     reward = 1
-        #                 else:
-        #                     if U_t1 > 0.95 * U_t:
-        #                         reward = 0
-        #                     else:
-        #                         reward = -1
-        return reward / 3
+        if Ta_t1 < Ta_t:
+            reward = 1
+        else:
+            if Ta_t1 > Ta_t:
+                reward = -1
+            else:
+                if Te_t1 < Te_t:
+                    reward = 1
+                else:
+                    if Te_t1 > Te_t:
+                        reward = -1
+                    else:
+                        if U_t1 > U_t:
+                            reward = 1
+                        else:
+                            if U_t1 > 0.95 * U_t:
+                                reward = 0
+                            else:
+                                reward = -1
+        return reward
 
     def play_with_single_rule(self, action):
         while not self.done:
@@ -317,9 +327,10 @@ if __name__ == "__main__":
     from utility import jsp_param
 
     jsp = JobShopProblem(jsp_param)
-    jsp.save_jsp_param("test.json")
-    jsp.print_param()
-    jsp = JobShopProblem("test.json")
-    jsp.print_param()
+    jsp.play_with_single_rule(0)
+    # jsp.save_jsp_param("test.json")
+    # jsp.print_param()
+    # jsp = JobShopProblem("test.json")
+    # jsp.print_param()
     print("Created!")
 

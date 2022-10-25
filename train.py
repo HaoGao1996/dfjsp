@@ -34,12 +34,13 @@ def train():
     epsilon = 0.5
     steps = 0
     loss = MAXINT
-    should_finished_early = False
+    running_score = 0
 
     for epoch in range(dqn_param.epochs):
         done = False
         state = env.reset()
         state = torch.FloatTensor(state)
+        score = 0
 
         while not done:
             steps += 1
@@ -56,6 +57,8 @@ def train():
             action_one_hot[action] = 1
             mask = 0 if done else 1
             memory.push(state, next_state, action_one_hot, reward, mask)
+
+            score += reward
             state = next_state
 
             if steps > dqn_param.initial_exploration:
@@ -72,14 +75,17 @@ def train():
                 steps_info.loc[len(steps_info.index)] = [epoch, steps, epsilon,
                                                          loss.detach().item(),
                                                          reward]
-                if steps > 10000:
+
+                if loss < 0.1:
                     should_finished_early = True
                     break
 
         if epoch % dqn_param.log_interval == 0:
-            print(f"{epoch} episode | epsilon: {epsilon:.2f} | steps: {steps} | loss: {loss:} | reward: {reward}")
+            print(f"{epoch} episode | epsilon: {epsilon:.2f} "
+                  f"| steps: {steps} | loss: {loss:} | reward: {reward} "
+                  f"| score: {score}")
 
-        if should_finished_early:
+        if score > jsp_param.J_num * jsp_param.max_op_num * 0.5 * 0.8:
             break
 
     steps_info.to_csv("./tmp_result/steps_info.csv", index=False)

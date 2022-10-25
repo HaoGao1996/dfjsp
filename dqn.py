@@ -101,4 +101,6 @@ class DQN(nn.Module):
         loss.backward()
         optimizer.step()
 
+        # if loss > 1:
+        #     print("error")
         return loss

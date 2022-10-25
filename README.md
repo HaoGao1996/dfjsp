@@ -46,6 +46,24 @@ classDiagram
     ActionSpace: sample()
 ```
 
+## Machine
+
+```mermaid
+classDiagram
+    class Machine
+    Machine : idx
+    Machine : CTK
+    Machine : ITK
+    Machine: UK
+    Machine: update(start_time, end_time)
+```
+
+$$
+UK = \frac{\sum_{i=1}^{n}\sum_{j=1}^{OP_i(t)}t_{ijk}X_{ijk}}{CTK}=1-\frac{ITK}{CTK}
+$$
+
+
+
 
 
 

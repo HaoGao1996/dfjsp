@@ -16,7 +16,7 @@ class Operation(object):
     def __init__(self, idx, param):
         self.idx = idx
         if isinstance(param, JSPParam):
-            self.t_ijk = [-1 if random.random() < param.pb_jop
+            self.t_ijk = [-1 if random.random() < 0.5
                           else random.randint(1, param.max_processing_time)
                           for _ in range(param.M_num)]
             if self.t_ijk.count(-1) == param.M_num:
@@ -63,7 +63,6 @@ class Job(object):
         self.OP = 0  # The number of completed operations of job
         self.CRJ = 0  # The completion rate of job
         self.is_uncompleted = True  # Checks if OP < op_num
-        self.is_tardiness = False  # Checks if OP < op_num and CTK > D
         self.estimated_t_ij = sum(self.t_ij[self.OP:])
 
     def update(self, end_time):
