@@ -6,10 +6,11 @@ from torch import optim
 from dqn import DQN, ReplayMemory
 from env import Env
 from utility import device, dqn_param, jsp_param, MAXINT
+from test import play, get_rules_tardiness
 
 
-def train():
-    steps_info = pd.DataFrame(columns=['epochs', 'steps', 'epsilon', 'loss', 'reward'])
+def train(stop_tardiness):
+    steps_info = pd.DataFrame(columns=['epochs', 'steps', 'epsilon', 'loss', 'reward', 'score', 'tardiness'])
 
     env = Env(jsp_param)
     torch.manual_seed(500)
@@ -34,7 +35,7 @@ def train():
     epsilon = 0.5
     steps = 0
     loss = MAXINT
-    running_score = 0
+    should_finished_early = False
 
     for epoch in range(dqn_param.epochs):
         done = False
@@ -72,20 +73,22 @@ def train():
                 for target_param, param in zip(target_net.parameters(), online_net.parameters()):
                     target_param.data.copy_(dqn_param.tau * param + (1 - dqn_param.tau) * target_param)
 
-                steps_info.loc[len(steps_info.index)] = [epoch, steps, epsilon,
-                                                         loss.detach().item(),
-                                                         reward]
+                if steps % dqn_param.log_interval == 0:
+                    play_env = Env("./tmp_result/train_test.json")
+                    tardiness = play(play_env, online_net)
+                    print(f"{epoch} episode | steps: {steps} "
+                          f"| epsilon: {epsilon:.2f} | loss: {loss:} "
+                          f"| reward: {reward} | score: {score}"
+                          f"| tardiness: {tardiness} | stop_tardiness: {stop_tardiness}")
+                    steps_info.loc[len(steps_info.index)] = [epoch, steps, epsilon,
+                                                             loss.detach().item(),
+                                                             reward, score, tardiness]
 
-                if loss < 0.1:
-                    should_finished_early = True
-                    break
+                    if tardiness < stop_tardiness:
+                        should_finished_early = True
+                        break
 
-        if epoch % dqn_param.log_interval == 0:
-            print(f"{epoch} episode | epsilon: {epsilon:.2f} "
-                  f"| steps: {steps} | loss: {loss:} | reward: {reward} "
-                  f"| score: {score}")
-
-        if score > jsp_param.J_num * jsp_param.max_op_num * 0.5 * 0.8:
+        if should_finished_early:
             break
 
     steps_info.to_csv("./tmp_result/steps_info.csv", index=False)
@@ -93,4 +96,8 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    tmp_jsp_param = "./tmp_result/train_test.json"
+    play_env = Env(jsp_param)
+    play_env.jsp.save_jsp_param(tmp_jsp_param)
+    stop_tardiness = min(get_rules_tardiness(tmp_jsp_param)) * 0.9
+    train(stop_tardiness)

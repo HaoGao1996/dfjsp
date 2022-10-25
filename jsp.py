@@ -328,9 +328,6 @@ if __name__ == "__main__":
 
     jsp = JobShopProblem(jsp_param)
     jsp.play_with_single_rule(0)
-    # jsp.save_jsp_param("test.json")
-    # jsp.print_param()
-    # jsp = JobShopProblem("test.json")
-    # jsp.print_param()
+
     print("Created!")
 

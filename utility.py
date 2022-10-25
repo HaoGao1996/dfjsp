@@ -5,14 +5,13 @@ import torch
 class DQNParam(object):
     def __init__(self,
                  gamma=0.9,
-                 lr=0.00001,
+                 lr=0.0001,
                  replay_memory_capacity=1000,
                  epochs=50,
                  initial_exploration=1000,
-                 log_interval=1,
+                 log_interval=100,
                  batch_size=32,
-                 update_target=100,
-                 hidden_layer=32,
+                 hidden_layer=128,
                  tau=0.01):
         self.gamma = gamma
         self.lr = lr
@@ -21,7 +20,6 @@ class DQNParam(object):
         self.initial_exploration = initial_exploration
         self.log_interval = log_interval
         self.batch_size = batch_size
-        self.update_target = update_target
         self.hidden_layer = hidden_layer
         self.tau = tau
 

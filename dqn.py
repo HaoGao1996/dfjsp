@@ -47,10 +47,6 @@ class DQN(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(inplace=True),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, outputs_dim),
         )
 
@@ -101,6 +97,4 @@ class DQN(nn.Module):
         loss.backward()
         optimizer.step()
 
-        # if loss > 1:
-        #     print("error")
         return loss

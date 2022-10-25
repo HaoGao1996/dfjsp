@@ -23,6 +23,18 @@ def play(env, online_net):
     return get_tardiness(env)
 
 
+def get_rules_tardiness(tmp_jsp_param):
+    round_result = []
+    env = Env(tmp_jsp_param)
+    action_dim = env.action_space.n
+
+    for j in range(action_dim):
+        env = Env(tmp_jsp_param)
+        env.jsp.play_with_single_rule(j)
+        round_result.append(get_tardiness(env))
+    return round_result
+
+
 def test(sample_num=1):
     tmp_jsp_param = "./tmp_result/jsp.json"
     tmp_net_param = "./tmp_result/dqn.pt"

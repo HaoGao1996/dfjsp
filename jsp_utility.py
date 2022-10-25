@@ -48,8 +48,7 @@ class Job(object):
             self.A = 0 if self.idx < param.J_init_num \
                 else int(random.expovariate(1 / param.E_ave))  # Arrival time of job
             self.t_ij = [op.t_ij_ave for op in self.operations]
-            self.D = int(sum(self.t_ij) * param.DDT) if self.idx < param.J_init_num \
-                else self.A + int(sum(self.t_ij) * param.DDT)  # Due date of a job
+            self.D = self.A + int(sum(self.t_ij) * param.DDT)  # Due date of a job
         elif isinstance(param, dict):
             self.op_num = param["op_num"]
             self.operations = [Operation(int(idx), operation) for idx, operation in param["operations"].items()]
