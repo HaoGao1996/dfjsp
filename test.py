@@ -78,7 +78,7 @@ def test(sample_num=1):
         elif np.argmin(round_result[1:]) == 0:
             count_random += 1
 
-        print(f"round: {i} | count: {count} | count_random: {count_random} | tardiness: {round_result}")
+        print(f"round: {i+1} | count: {count} | count_random: {count_random} | tardiness: {round_result}")
         test_result.loc[len(test_result.index)] = round_result
 
     return test_result
