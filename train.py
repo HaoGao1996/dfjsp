@@ -99,5 +99,5 @@ if __name__ == "__main__":
     tmp_jsp_param = "./tmp_result/train_test.json"
     play_env = Env(jsp_param)
     play_env.jsp.save_jsp_param(tmp_jsp_param)
-    stop_tardiness = min(get_rules_tardiness(tmp_jsp_param)) * 0.9
+    stop_tardiness = min(get_rules_tardiness(tmp_jsp_param)) * 0.90
     train(stop_tardiness)
